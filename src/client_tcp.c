@@ -15,12 +15,13 @@
 
 int main(void)
 {
+	char *buff=malloc(MAXLINE);
 	int clientfd=socket(AF_INET,SOCK_STREAM , IPPROTO_TCP); 
 	struct sockaddr_in clientAddr;
 	clientAddr.sin_port=htons(PORT);
 	clientAddr.sin_family=AF_INET;
 	inet_pton(AF_INET, IP, &clientAddr.sin_addr.s_addr);
-	int ret=connect(clientfd, &clientAddr,sizeof(clientAddr));
+	int ret=connect(clientfd,(struct sockaddr*) &clientAddr,sizeof(clientAddr));
 	if(ret== -1){
 		perror("connect error");
 		exit(-1);
