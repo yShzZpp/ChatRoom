@@ -31,10 +31,10 @@ int main(void)
 	serverAddr.sin_port=htons(PORT);
 
 	ret=bind(listenfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-	if(ret==-1)
+	if(ret!=0)
 		perror("bind error");
 	ret=listen(listenfd,10);
-	if(ret==-1)
+	if(ret!=0)
 		perror("listen error");
 
 	while(1){
