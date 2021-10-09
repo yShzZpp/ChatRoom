@@ -1,6 +1,6 @@
 CC		= gcc
-ELF_SERVER		= ./server_tcp
-ELF_CLIENT		= ./client_tcp
+ELF_SERVER		= ./server
+ELF_CLIENT		= ./client
 ELF		= $(ELF_SERVER)
 ELF		+= $(ELF_CLIENT)
 SRC_SERVER		= $(wildcard ./src/server*.c)

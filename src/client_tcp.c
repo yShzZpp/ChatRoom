@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -17,6 +18,7 @@ int main(void)
 {
 	char *buff=malloc(MAXLINE);
 	bzero(buff,MAXLINE);
+	memset(buff,80,20);
 	int clientfd=socket(AF_INET,SOCK_STREAM , IPPROTO_TCP); 
 	struct sockaddr_in clientAddr;
 	clientAddr.sin_port=htons(PORT);
@@ -31,5 +33,4 @@ int main(void)
 	free(buff);
 	close(clientfd);
 	return 0;
-
 }
