@@ -16,6 +16,7 @@
 int main(void)
 {
 	char *buff=malloc(MAXLINE);
+	bzero(buff,MAXLINE);
 	int clientfd=socket(AF_INET,SOCK_STREAM , IPPROTO_TCP); 
 	struct sockaddr_in clientAddr;
 	clientAddr.sin_port=htons(PORT);

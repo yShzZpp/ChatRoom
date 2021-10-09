@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -18,8 +19,47 @@
 
 int main(void)
 {
-	int serverfd=socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	struct sockaddr serverAddr,clientAddr;
-	
+	int ret;
+	char *buff=malloc(MAXLINE);
+	bzero(buff,MAXLINE);
+	socklen_t clientSize;
+	int listenfd=socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	struct sockaddr_in serverAddr,clientAddr;
+	int opt=1;
+	serverAddr.sin_addr.s_addr=htonl(INADDR_ANY);
+	serverAddr.sin_family=AF_INET;
+	serverAddr.sin_port=htons(PORT);
+
+	ret=bind(listenfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+	if(ret==-1)
+		perror("bind error");
+	ret=listen(listenfd,10);
+	if(ret==-1)
+		perror("listen error");
+
+	while(1){
+		int clientfd=accept(listenfd,(struct sockaddr*)&clientAddr,&clientSize);
+		recv(clientfd,buff,MAXLINE,0);
+		printf("%s\n",buff);
+		bzero(buff,MAXLINE);
+	}
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
