@@ -40,7 +40,8 @@ int main(void)
 	while(1){
 		int clientfd=accept(listenfd,(struct sockaddr*)&clientAddr,&clientSize);
 		recv(clientfd,buff,MAXLINE,0);
-		printf("%s\n",buff);
+		printf("%s %d\n",inet_ntoa(clientAddr.sin_addr),ntohs(clientAddr.sin_port));
+		printf("server recv:%s\n",buff);
 		bzero(buff,MAXLINE);
 	}
 
