@@ -15,6 +15,7 @@
 #include <sys/epoll.h>
 #include <assert.h>
 #include "../inc/my_tcp.h"
+#include "../inc/cjson.h"
 #define PORT 5555
 
 int main(void)

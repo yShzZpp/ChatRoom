@@ -3,6 +3,7 @@ ELF_SERVER		= ./server
 ELF_CLIENT		= ./client
 ELF		= $(ELF_SERVER)
 ELF		+= $(ELF_CLIENT)
+SRC_BOTH		= $(wildcard ./src/cjson*.c)
 SRC_SERVER		= $(wildcard ./src/server*.c)
 SRC_CLIENT		= $(wildcard ./src/client*.c)
 
