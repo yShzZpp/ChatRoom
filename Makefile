@@ -3,33 +3,42 @@ ELF_SERVER		= ./server
 ELF_CLIENT		= ./client
 ELF		= $(ELF_SERVER)
 ELF		+= $(ELF_CLIENT)
-SRC_BOTH		= $(wildcard ./src/cjson*.c)
-SRC_SERVER		= $(wildcard ./src/server*.c)
-SRC_CLIENT		= $(wildcard ./src/client*.c)
 
-OBJ_SERVER		= $(patsubst %.c,%.o,$(SRC_SERVER))
-OBJ_CLIENT		= $(patsubst %.c,%.o,$(SRC_CLIENT))
+SRC_ALL			= $(wildcard ./src/*.c)
+SRC_SERVER		= $(filter-out ./src/client_tcp.c,$(SRC_ALL))
+SRC_CLIENT		= $(filter-out ./src/server_tcp.c,$(SRC_ALL))
+
+OBJ_ALL			= $(patsubst %.c,%.o,$(SRC_ALL))
+OBJ_SERVER		= $(patsubst %.c,%_server.o,$(SRC_SERVER))
+OBJ_CLIENT		= $(patsubst %.c,%_client.o,$(SRC_CLIENT))
 
 OBJ		= $(OBJ_SERVER)
 OBJ		+= $(OBJ_CLIENT)
-C99		=-std=c99
+C99		=-std=c99 
+LIB		= -lm -lpthread
 INC		= -I ./inc
 
 all:server client
 server:$(ELF_SERVER)
 $(ELF_SERVER):$(OBJ_SERVER)
-	$(CC) -g $^ -o $@ $(INC) $(C99)
+	$(CC) -g $^ -o $@ $(INC) $(C99) $(LIB)
 $(OBJ_SERVER):$(SRC_SERVER)
-	$(CC) -g $< -o $@  -c $(C99) $(INC)
+	$(CC) -g $< -o $@  -c $(C99) $(INC) $(LIB)
 
 client:$(ELF_CLIENT)
 $(ELF_CLIENT):$(OBJ_CLIENT)
-	$(CC) $^ -o $@ $(INC) $(C99)
+	$(CC) $^ -o $@ $(INC) $(C99) $(LIB)
 $(OBJ_CLIENT):$(SRC_CLIENT)
-	$(CC) $< -o $@  -c $(C99) $(INC)
+	$(CC) $< -o $@  -c $(C99) $(INC) $(LIB)
+print:
+	@echo $(SRC_SERVER)
+	@echo $(OBJ_SERVER)
+	@echo $(SRC_CLIENT)
+	@echo $(OBJ_CLIENT)
+
 # %.o:%.c
 # 	$(CC) $< -o $@  -c 
 # gcc -fPIC -shared -o $(SO) -I inc/ src/gdbtest.c 
 
 clean:
-	$(RM) $(ELF) $(OBJ)
+	$(RM) $(ELF) $(OBJ_ALL)
