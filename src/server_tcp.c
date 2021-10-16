@@ -14,12 +14,23 @@
 #include <signal.h>
 #include <sys/epoll.h>
 #include <assert.h>
+#include <pthread.h>
 #include "../inc/cjson.h"
 #include "../inc/my_tcp.h"
 
+#define FULLCLIENT "sorry client if full,please wait"
 #define MAXLINE 1024
 #define PORT 5555
-#define MAXCLIENT_NUM 10  
+#define MAXCLIENT_NUM 1  
+
+void *clientIsFull(void *fd)
+{
+	int *clientfd=(int *)fd;
+	printf("client%d is closing",*clientfd);
+	send(*clientfd,FULLCLIENT,strlen(FULLCLIENT),0)	;
+	close(*clientfd);
+	return NULL;
+}
 
 Map map[MAXCLIENT_NUM];
 
@@ -83,17 +94,28 @@ int main(void)
 						perror("accept error");
 						continue;
 					}
-
-					printf("accept %s %d\n",inet_ntoa(clientAddr.sin_addr),ntohs(clientAddr.sin_port));
-					event.events=EPOLLIN|EPOLLET;
-					event.data.fd=clientfd;
-					if(epoll_ctl(epfd,EPOLL_CTL_ADD,clientfd,&event)==-1){
-						perror("new client epoll add error");
-						exit(-1);
+					/** 未超出可连接数量 */
+					if(clientNum<MAXCLIENT_NUM){
+						event.events=EPOLLIN|EPOLLET;
+						event.data.fd=clientfd;
+						if(epoll_ctl(epfd,EPOLL_CTL_ADD,clientfd,&event)==-1){
+							perror("new client epoll add error");
+							exit(-1);
+						}
+						clientNum++;
+						printf("%d accept client %02d :%s %d\n",clientfd,clientNum,inet_ntoa(clientAddr.sin_addr),ntohs(clientAddr.sin_port));
 					}
-				/** 可读事件 */
-				}else {  
+					
+					/** 超过可连接数量	 */
+					else if(clientNum ==MAXCLIENT_NUM){
+						pthread_t pid;
+						pthread_create(&pid,NULL,clientIsFull,(void*)&clientfd);
+						pthread_detach(pid);
+					}
+				}/** 可读事件 */
+				else {  
 					int fd=events[i].data.fd;
+					printf("*******fd %d will be recv       ********\n",fd);
 					ret=recv(fd,buff,MAXLINE,0);
 
 					/** 读取错误 */
@@ -105,6 +127,8 @@ int main(void)
 					}else if(ret==0){
 						printf("%d is disconnect\n",fd);
 						epoll_ctl(epfd,EPOLL_CTL_DEL,fd,NULL);
+						clientNum--;
+						/** 查找与删除断开的用户 */
 						continue;
 					}
 

@@ -34,7 +34,8 @@ int main(void)
 	}
 	while(1 ){
 		send(clientfd, buff, MAXLINE, 0);
-		sleep(1);
+		bzero(buff,strlen(buff));
+		recv(clientfd,buff,MAXLINE,0);
 	}	
 	free(buff);
 	close(clientfd);
