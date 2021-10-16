@@ -31,8 +31,10 @@ int main(void)
 		perror("connect error");
 		exit(-1);
 	}
-	send(clientfd, buff, MAXLINE, 0);
-
+	while(1 ){
+		send(clientfd, buff, MAXLINE, 0);
+		sleep(1);
+	}	
 	free(buff);
 	close(clientfd);
 	return 0;
