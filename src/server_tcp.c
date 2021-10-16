@@ -21,7 +21,7 @@
 #define FULLCLIENT "sorry client if full,please wait"
 #define MAXLINE 1024
 #define PORT 5555
-#define MAXCLIENT_NUM 1  
+#define MAXCLIENT_NUM 10  
 
 void *clientIsFull(void *fd)
 {
@@ -33,6 +33,25 @@ void *clientIsFull(void *fd)
 }
 
 Map map[MAXCLIENT_NUM];
+
+int findEmptyMap()
+{
+	for(int i=0;i<MAXCLIENT_NUM;i++){
+		if(map[i].fd==0)return i;
+	}
+	return -1;
+}
+
+void showMap()
+{ 
+	printf("----------------------------------------------------------\n");
+	printf("    fd      name      tellwho            ip          port\n");
+	for(int i=0;i<MAXCLIENT_NUM;i++){
+		if(map[i].fd==0)continue;
+		printf("%02d  %02d %10s  %10s %16s %9d\n",i,map[i].fd,map[i].userName,map[i].charWithWho,map[i].ip,map[i].port);
+	}
+	printf("----------------------------------------------------------\n");
+}
 
 int main(void)
 {
@@ -75,6 +94,8 @@ int main(void)
 	}
 
 	bzero(map,sizeof(map));
+	printf("map size %ld\n",sizeof(map));
+	showMap();
 	int clientNum=0; 
 	  
 	while(1){
@@ -96,13 +117,21 @@ int main(void)
 					}
 					/** 未超出可连接数量 */
 					if(clientNum<MAXCLIENT_NUM){
+						int emptyNum=findEmptyMap();
+						map[emptyNum].fd=clientfd;
+						strcpy(map[emptyNum].userName,"test1");
+						strcpy(map[emptyNum].charWithWho,"test2");
+						strcpy(map[emptyNum].ip,inet_ntoa(clientAddr.sin_addr));
+						map[emptyNum].port=ntohs(clientAddr.sin_port);
+						clientNum++;
+						showMap();
+
 						event.events=EPOLLIN|EPOLLET;
-						event.data.fd=clientfd;
+						event.data.ptr=(void*)&map[emptyNum];
 						if(epoll_ctl(epfd,EPOLL_CTL_ADD,clientfd,&event)==-1){
 							perror("new client epoll add error");
 							exit(-1);
 						}
-						clientNum++;
 						printf("%d accept client %02d :%s %d\n",clientfd,clientNum,inet_ntoa(clientAddr.sin_addr),ntohs(clientAddr.sin_port));
 					}
 					
@@ -114,7 +143,8 @@ int main(void)
 					}
 				}/** 可读事件 */
 				else {  
-					int fd=events[i].data.fd;
+					Map *readMap=(Map*)events[i].data.ptr;
+					int fd=readMap->fd;
 					ret=recv(fd,buff,MAXLINE,0);
 
 					/** 读取错误 */

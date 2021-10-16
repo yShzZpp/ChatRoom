@@ -9,8 +9,10 @@
 
 typedef struct clientMsgMap{
 	int fd;
-	char userName[0];
-	char charWithWho[0];
+	char userName[64];
+	char charWithWho[64];
+	char ip[16];
+	unsigned short port;
 }Map;
 
 
