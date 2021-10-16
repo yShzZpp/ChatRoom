@@ -39,7 +39,7 @@ int main(void)
 	int ret;
 	char *buff=malloc(MAXLINE);
 	bzero(buff,MAXLINE);
-	socklen_t clientSize;
+	socklen_t clientSize=0;
 	int listenfd=socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	struct sockaddr_in serverAddr,clientAddr;
 	/** 设置客户端与服务端重复使用IP */
@@ -110,12 +110,11 @@ int main(void)
 					else if(clientNum ==MAXCLIENT_NUM){
 						pthread_t pid;
 						pthread_create(&pid,NULL,clientIsFull,(void*)&clientfd);
-						pthread_detach(pid);
+						/** pthread_detach(pid); */
 					}
 				}/** 可读事件 */
 				else {  
 					int fd=events[i].data.fd;
-					printf("*******fd %d will be recv       ********\n",fd);
 					ret=recv(fd,buff,MAXLINE,0);
 
 					/** 读取错误 */
@@ -138,7 +137,7 @@ int main(void)
 
 			/** 可写事件 */
 			}else if(events[i].events==EPOLLOUT){
-
+				
 			}
 
 		}

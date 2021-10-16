@@ -33,9 +33,11 @@ int main(void)
 		exit(-1);
 	}
 	while(1 ){
-		send(clientfd, buff, MAXLINE, 0);
+		if( send(clientfd, buff, MAXLINE, 0)== -1)break;
 		bzero(buff,strlen(buff));
-		recv(clientfd,buff,MAXLINE,0);
+		if(recv(clientfd,buff,MAXLINE,0)==-1)break;
+		printf("server : %s\n",buff);
+		bzero(buff,strlen(buff));
 	}	
 	free(buff);
 	close(clientfd);
