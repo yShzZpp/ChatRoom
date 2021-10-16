@@ -1,6 +1,7 @@
 #ifndef __MY_TCP_H
 #define __MY_TCP_H
 #define MAXLINE 1024
+#define PROTO_FIRST 0
 
 #endif
 #include <sys/types.h>
@@ -9,12 +10,21 @@
 
 typedef struct clientMsgMap{
 	int fd;
-	char userName[64];
-	char charWithWho[64];
+	char userName[16];
+	char charWithWho[16];
 	char ip[16];
 	unsigned short port;
 }Map;
 
+typedef struct userMsg{
+	char userName[16];
+	char charWithWho[16];
+}User;
+
+
+void jsonFirstConnect_A(char *payload,Map *map);
+void jsonFirstConnect_P(User *user,char *out);
+int jsonProtocol(char *payload);
 
 /*******************结构体***************/
 /*

@@ -17,11 +17,12 @@
 #define MAXLINE 1024
 /** #define IP "120.77.40.75" */
 #define IP "172.28.255.15"
+
 int main(void)
 {
 	char *buff=malloc(MAXLINE);
+	User user;
 	bzero(buff,MAXLINE);
-	memset(buff,80,20);
 	int clientfd=socket(AF_INET,SOCK_STREAM , IPPROTO_TCP); 
 	struct sockaddr_in clientAddr;
 	clientAddr.sin_port=htons(PORT);
@@ -32,6 +33,13 @@ int main(void)
 		perror("connect error");
 		exit(-1);
 	}
+	printf("who are you?\n");
+	scanf("%s",user.userName);
+	printf("who do you want to chat to?\n");
+	scanf("%s",user.charWithWho);
+	jsonFirstConnect_P(&user,buff);
+	printf("%d\n",jsonProtocol(buff));
+
 	while(1 ){
 		if( send(clientfd, buff, MAXLINE, 0)== -1)break;
 		bzero(buff,strlen(buff));

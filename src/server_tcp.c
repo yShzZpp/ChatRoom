@@ -19,21 +19,30 @@
 #include "../inc/my_tcp.h"
 
 #define FULLCLIENT "sorry client if full,please wait"
-#define MAXLINE 1024
 #define PORT 5555
 #define MAXCLIENT_NUM 10  
+
+void showMap();
 
 void *clientIsFull(void *fd)
 {
 	int *clientfd=(int *)fd;
-	printf("client%d is closing",*clientfd);
+	printf("client%d is closing\n",*clientfd);
 	send(*clientfd,FULLCLIENT,strlen(FULLCLIENT),0)	;
 	close(*clientfd);
 	return NULL;
 }
 
 Map map[MAXCLIENT_NUM];
+	
+/** 客户端信息录入 */
+void clientMsgWrite(int clientNum,char *buff)
+{
+	jsonFirstConnect_A(buff,&map[clientNum]);
+	showMap();
+}
 
+/** 在用户表中找到空的表位置 */
 int findEmptyMap()
 {
 	for(int i=0;i<MAXCLIENT_NUM;i++){
@@ -42,13 +51,33 @@ int findEmptyMap()
 	return -1;
 }
 
+/** 通过fd查询用户表的位置 */
+int findClinetNum(int fd)
+{
+	for(int i=0;i<MAXCLIENT_NUM;i++){
+		if(map[i].fd==fd){
+			return i;
+		}
+	}
+	printf("the fd %d is no finded\n",fd);
+	return -1;
+}
+
+/** 通过用户的num删除该用户 */
+void deleteClient(int clientNum)
+{
+	bzero(&map[clientNum],sizeof(Map));
+
+}
+
+/** 展示用户表 */
 void showMap()
 { 
 	printf("----------------------------------------------------------\n");
-	printf("    fd      name      tellwho            ip          port\n");
+	printf("    fd       name     chatwho              ip          port\n");
 	for(int i=0;i<MAXCLIENT_NUM;i++){
 		if(map[i].fd==0)continue;
-		printf("%02d  %02d %10s  %10s %16s %9d\n",i,map[i].fd,map[i].userName,map[i].charWithWho,map[i].ip,map[i].port);
+		printf("%02d  %02d %10s  %10s %15s %13d\n",i,map[i].fd,map[i].userName,map[i].charWithWho,map[i].ip,map[i].port);
 	}
 	printf("----------------------------------------------------------\n");
 }
@@ -96,7 +125,7 @@ int main(void)
 	bzero(map,sizeof(map));
 	printf("map size %ld\n",sizeof(map));
 	showMap();
-	int clientNum=0; 
+	int clientSum=0; 
 	  
 	while(1){
 		int nEvents=epoll_wait(epfd,events,MAXCLIENT_NUM,-1);
@@ -116,14 +145,14 @@ int main(void)
 						continue;
 					}
 					/** 未超出可连接数量 */
-					if(clientNum<MAXCLIENT_NUM){
+					if(clientSum<MAXCLIENT_NUM){
 						int emptyNum=findEmptyMap();
 						map[emptyNum].fd=clientfd;
-						strcpy(map[emptyNum].userName,"test1");
-						strcpy(map[emptyNum].charWithWho,"test2");
+						/** strcpy(map[emptyNum].userName,"test1"); */
+						/** strcpy(map[emptyNum].charWithWho,"test2"); */
 						strcpy(map[emptyNum].ip,inet_ntoa(clientAddr.sin_addr));
 						map[emptyNum].port=ntohs(clientAddr.sin_port);
-						clientNum++;
+						clientSum++;
 						showMap();
 
 						event.events=EPOLLIN|EPOLLET;
@@ -132,11 +161,10 @@ int main(void)
 							perror("new client epoll add error");
 							exit(-1);
 						}
-						printf("%d accept client %02d :%s %d\n",clientfd,clientNum,inet_ntoa(clientAddr.sin_addr),ntohs(clientAddr.sin_port));
 					}
 					
 					/** 超过可连接数量	 */
-					else if(clientNum ==MAXCLIENT_NUM){
+					else if(clientSum ==MAXCLIENT_NUM){
 						pthread_t pid;
 						pthread_create(&pid,NULL,clientIsFull,(void*)&clientfd);
 						/** pthread_detach(pid); */
@@ -145,6 +173,7 @@ int main(void)
 				else {  
 					Map *readMap=(Map*)events[i].data.ptr;
 					int fd=readMap->fd;
+					int clientNum=findClinetNum(fd);
 					ret=recv(fd,buff,MAXLINE,0);
 
 					/** 读取错误 */
@@ -156,12 +185,18 @@ int main(void)
 					}else if(ret==0){
 						printf("%d is disconnect\n",fd);
 						epoll_ctl(epfd,EPOLL_CTL_DEL,fd,NULL);
-						clientNum--;
+						clientSum--;
 						/** 查找与删除断开的用户 */
+						deleteClient(clientNum);
+						showMap();
 						continue;
 					}
-
+					/** 分析数据 */
 					printf("server recv:%s\n",buff);
+					int protocol=jsonProtocol(buff);
+					switch(protocol){
+						case PROTO_FIRST:clientMsgWrite(clientNum,buff);break;
+					}
 					bzero(buff,MAXLINE); 
 				}
 
