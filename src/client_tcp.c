@@ -39,10 +39,15 @@ int main(void)
 	scanf("%s",user.charWithWho);
 	jsonFirstConnect_P(&user,buff);
 	printf("%d\n",jsonProtocol(buff));
+	if( send(clientfd, buff, MAXLINE, 0)== -1)perror("send error");
 
 	while(1 ){
+		printf("--------------------------------\n");
+		scanf("%s",buff);
+		jsonChat_P(&user,buff,buff);
 		if( send(clientfd, buff, MAXLINE, 0)== -1)break;
 		bzero(buff,strlen(buff));
+		printf("--------------------------------\n");
 		if(recv(clientfd,buff,MAXLINE,0)==-1)break;
 		printf("server : %s\n",buff);
 		bzero(buff,strlen(buff));

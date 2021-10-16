@@ -2,6 +2,8 @@
 #define __MY_TCP_H
 #define MAXLINE 1024
 #define PROTO_FIRST 0
+#define PROTO_SEND 1
+#define PROTO_RECV 2
 
 #endif
 #include <sys/types.h>
@@ -22,6 +24,7 @@ typedef struct userMsg{
 }User;
 
 
+void jsonChat_P(User *user,char *payload,char *out);
 void jsonFirstConnect_A(char *payload,Map *map);
 void jsonFirstConnect_P(User *user,char *out);
 int jsonProtocol(char *payload);
