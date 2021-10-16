@@ -14,8 +14,9 @@
 #include <signal.h>
 #include <sys/epoll.h>
 #include <assert.h>
-#include "../inc/my_tcp.h"
 #include "../inc/cjson.h"
+
+#define MAXLINE 1024
 #define PORT 5555
 
 int main(void)

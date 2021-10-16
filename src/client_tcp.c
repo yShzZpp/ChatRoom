@@ -10,9 +10,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
-#include "../inc/my_tcp.h"
+#include "../inc/cjson.h"
 
 #define PORT 5555
+#define MAXLINE 1024
 /** #define IP "120.77.40.75" */
 #define IP "172.28.255.15"
 int main(void)
