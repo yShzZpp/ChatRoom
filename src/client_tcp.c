@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "../inc/cjson.h"
+#include "../inc/my_tcp.h"
 
 #define PORT 5555
 #define MAXLINE 1024

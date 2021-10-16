@@ -7,6 +7,12 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 
+typedef struct clientMsgMap{
+	int fd;
+	char userName[0];
+	char charWithWho[0];
+}Map;
+
 
 /*******************结构体***************/
 /*

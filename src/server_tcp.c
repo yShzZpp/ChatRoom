@@ -15,9 +15,13 @@
 #include <sys/epoll.h>
 #include <assert.h>
 #include "../inc/cjson.h"
+#include "../inc/my_tcp.h"
 
 #define MAXLINE 1024
 #define PORT 5555
+#define MAXCLIENT_NUM 10  
+
+Map map[MAXCLIENT_NUM];
 
 int main(void)
 {
@@ -34,42 +38,85 @@ int main(void)
 	serverAddr.sin_family=AF_INET;
 	serverAddr.sin_port=htons(PORT);
 
-	ret=bind(listenfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-	if(ret!=0)
+	if(bind(listenfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr))!=0){ 
 		perror("bind error");
-	ret=listen(listenfd,10);
-	if(ret!=0)
+		exit(-1);
+	}
+	  
+
+	if(listen(listenfd,MAXCLIENT_NUM)!=0){ 
 		perror("listen error");
+		exit(-1);
+	}
+
 	/** epoll设置 */
+	  
 	int epfd=epoll_create(1);
-	struct epoll_event event,events[10];
+	struct epoll_event event,events[MAXCLIENT_NUM];
 	bzero(&event,sizeof(event));
 	bzero(events,sizeof(events));
 
 	event.events=EPOLLIN;
 	event.data.fd=listenfd;
-	if (epoll_ctl(epfd,EPOLL_CTL_ADD,listenfd,&event)==-1)	
+	if (epoll_ctl(epfd,EPOLL_CTL_ADD,listenfd,&event)==-1){ 	
 		perror("epoll ctl error");
+		exit(-1);
+	}
 
+	bzero(map,sizeof(map));
+	int clientNum=0; 
+	  
 	while(1){
-		int nEvents=epoll_wait(epfd,events,10,-1);
-		if(nEvents==-1)perror("epoll wait error");
+		int nEvents=epoll_wait(epfd,events,MAXCLIENT_NUM,-1);
+		if(nEvents==-1){
+			perror("epoll wait error");
+			exit(-1);
+		}	
 		for(int i=0;i<nEvents;i++){
+			/** 输入事件 */
 			if(events[i].events==EPOLLIN){
+
+				/** 连接事件 */
 				if(events[i].data.fd==listenfd){
 					int clientfd=accept(listenfd,(struct sockaddr*)&clientAddr,&clientSize);
-					if(clientfd==-1)perror("accept error");
+					if(clientfd==-1){
+						perror("accept error");
+						continue;
+					}
+
 					printf("accept %s %d\n",inet_ntoa(clientAddr.sin_addr),ntohs(clientAddr.sin_port));
 					event.events=EPOLLIN|EPOLLET;
 					event.data.fd=clientfd;
-					if(epoll_ctl(epfd,EPOLL_CTL_ADD,clientfd,&event)==-1)perror("new client epoll add error");
+					if(epoll_ctl(epfd,EPOLL_CTL_ADD,clientfd,&event)==-1){
+						perror("new client epoll add error");
+						exit(-1);
+					}
+				/** 可读事件 */
 				}else {  
 					int fd=events[i].data.fd;
-					recv(fd,buff,MAXLINE,0);
+					ret=recv(fd,buff,MAXLINE,0);
+
+					/** 读取错误 */
+					if(ret==-1){
+						perror("recv error");
+						exit(-1);
+					/** 断开连接 */
+
+					}else if(ret==0){
+						printf("%d is disconnect\n",fd);
+						epoll_ctl(epfd,EPOLL_CTL_DEL,fd,NULL);
+						continue;
+					}
+
 					printf("server recv:%s\n",buff);
 					bzero(buff,MAXLINE); 
 				}
+
+			/** 可写事件 */
+			}else if(events[i].events==EPOLLOUT){
+
 			}
+
 		}
 	}
 
