@@ -44,7 +44,7 @@ void *getServerMsg(void* clientfd)
 				pthread_cancel(pthread_self());
 				printf("\n");
 			}
-			printf("%s\n",buff);
+			jsonFromWho_A(buff);
 			pthread_mutex_unlock(&mutex);
 		}
 	}
@@ -69,9 +69,10 @@ int main(void)
 	/** 用户名 */
 	printf("who are you?\n");
 	scanf("%s",user.userName);
+	printf("who do you want to chat with?\n");
+	scanf("%s",user.charWithWho);
 
 	jsonFirstConnect_P(&user,buff);
-	printf("%d\n",jsonProtocol(buff));
 	if( send(clientfd, buff, MAXLINE, 0)== -1)perror("send error");
 
 	pthread_t pid;
@@ -82,10 +83,6 @@ int main(void)
 		scanf("%s",buff);
 		jsonChat_P(&user,buff,buff);
 		if( send(clientfd, buff, MAXLINE, 0)== -1)break;
-		bzero(buff,strlen(buff));
-		printf("--------------------------------\n");
-		if(recv(clientfd,buff,MAXLINE,0)==-1)break;
-		printf("server : %s\n",buff);
 		bzero(buff,strlen(buff));
 	}	
 	free(buff);

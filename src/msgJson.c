@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <strings.h>
 #include <assert.h>
 #include "../inc/cjson.h"
@@ -64,6 +65,33 @@ void jsonChat_P(User *user,char *payload,char *out)
 	cJSON_AddItemToObject(rootJson,"data",dataJson);
 	bzero(out,strlen(out));
 	strcpy(out,cJSON_PrintUnformatted(rootJson));
+}
+
+/** 服务器收到信息后 分析 到哪去 */
+void jsonToWho_A(char *payload,char *charWithWho)
+{
+	cJSON *rootJson=cJSON_Parse(payload);
+	assert(rootJson!=NULL);
+	cJSON *dataJson=cJSON_GetObjectItem(rootJson,"data");
+	assert(dataJson!=NULL);
+	cJSON *getCharWithWho=cJSON_GetObjectItem(dataJson,"charWithWho");
+	assert(getCharWithWho!=NULL);
+	strcpy(charWithWho,getCharWithWho->valuestring);
+
+}
+
+/** 客户端收到信息后 分析 从哪来 带了什么 */
+void jsonFromWho_A(char *payload)
+{
+	cJSON *rootJson=cJSON_Parse(payload);
+	assert(rootJson!=NULL);
+	cJSON *dataJson=cJSON_GetObjectItem(rootJson,"data");
+	assert(dataJson!=NULL);
+	cJSON *getCharWithWho=cJSON_GetObjectItem(dataJson,"charWithWho");
+	assert(getCharWithWho!=NULL);
+	cJSON *getWords=cJSON_GetObjectItem(dataJson,"words");
+	assert(getWords!=NULL);
+	printf("from:%s:\n%s\n",getCharWithWho->valuestring,getWords->valuestring);
 }
 
 

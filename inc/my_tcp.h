@@ -28,7 +28,8 @@ void jsonChat_P(User *user,char *payload,char *out);
 void jsonFirstConnect_A(char *payload,Map *map);
 void jsonFirstConnect_P(User *user,char *out);
 int jsonProtocol(char *payload);
-
+void jsonToWho_A(char *payload,char *charWithWho);
+void jsonFromWho_A(char *payload);
 /*******************结构体***************/
 /*
 struct sockaddr {

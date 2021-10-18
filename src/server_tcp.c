@@ -23,6 +23,7 @@
 #define MAXCLIENT_NUM 10  
 
 void showMap();
+int findFd(char *userName);
 
 void *clientIsFull(void *fd)
 {
@@ -42,12 +43,38 @@ void clientMsgWrite(int clientNum,char *buff)
 	showMap();
 }
 
+/** 传递信息 */
+void serverTansMsg(int clientNum,char *buff)
+{
+	char *charWithWho=(char *)malloc(16);
+	/** 获取想发给谁 */
+	jsonToWho_A(buff,charWithWho);
+	strcpy(map[clientNum].charWithWho,charWithWho);
+	int fd=findFd(charWithWho);
+	printf("发送信息给 fd:%d\n",fd);
+	if(fd>0)
+		send(fd,buff,strlen(buff),0);
+	showMap();
+	free(charWithWho);
+}
+
 /** 在用户表中找到空的表位置 */
 int findEmptyMap()
 {
 	for(int i=0;i<MAXCLIENT_NUM;i++){
 		if(map[i].fd==0)return i;
 	}
+	return -1;
+}
+
+/** 通过用户名查找fd */
+int findFd(char *userName)
+{
+	int fd;
+	for(int i=0;i<MAXCLIENT_NUM;i++){
+		if(strcmp(userName,map[i].userName)==0)return map[i].fd;
+	}
+	printf("error not such user\n");
 	return -1;
 }
 
@@ -148,8 +175,6 @@ int main(void)
 					if(clientSum<MAXCLIENT_NUM){
 						int emptyNum=findEmptyMap();
 						map[emptyNum].fd=clientfd;
-						/** strcpy(map[emptyNum].userName,"test1"); */
-						/** strcpy(map[emptyNum].charWithWho,"test2"); */
 						strcpy(map[emptyNum].ip,inet_ntoa(clientAddr.sin_addr));
 						map[emptyNum].port=ntohs(clientAddr.sin_port);
 						clientSum++;
@@ -196,13 +221,17 @@ int main(void)
 					int protocol=jsonProtocol(buff);
 					switch(protocol){
 						case PROTO_FIRST:clientMsgWrite(clientNum,buff);break;
+						case PROTO_SEND:serverTansMsg(clientNum,buff);break;
 					}
 					bzero(buff,MAXLINE); 
 				}
 
 			/** 可写事件 */
 			}else if(events[i].events==EPOLLOUT){
-				
+				/** Map *readMap=(Map*)events[i].data.ptr; */
+				/** int fd=readMap->fd; */
+				/** memset(buff,81,8); */
+				/** send(fd,buff,MAXLINE,0); */
 			}
 
 		}
