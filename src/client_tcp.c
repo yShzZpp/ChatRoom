@@ -1,4 +1,6 @@
+#include <pthread.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -17,9 +19,40 @@
 #define MAXLINE 1024
 /** #define IP "120.77.40.75" */
 #define IP "172.28.255.15"
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *getServerMsg(void* clientfd)
+{
+	char *buff=malloc(MAXLINE);
+	int fd=*(int *)clientfd,ret=0;
+	fd_set readSet ;
+	FD_ZERO(&readSet);
+	FD_SET(fd,&readSet);
+
+	while(1){
+		ret=select(fd+1,&readSet,NULL,NULL,NULL);
+		if(ret<0){ 
+			perror("select error"); 
+			pthread_cancel(pthread_self());
+			printf("\n");
+		}
+		if(FD_ISSET(fd,&readSet)){
+			pthread_mutex_lock(&mutex);
+			bzero(buff,strlen(buff));
+			if(recv(fd,buff,MAXLINE,0)==-1){
+				perror("recv error"); 
+				pthread_cancel(pthread_self());
+				printf("\n");
+			}
+			printf("%s\n",buff);
+			pthread_mutex_unlock(&mutex);
+		}
+	}
+	return NULL;
+}
 
 int main(void)
-{
+{	
 	char *buff=malloc(MAXLINE);
 	User user;
 	bzero(buff,MAXLINE);
@@ -33,13 +66,16 @@ int main(void)
 		perror("connect error");
 		exit(-1);
 	}
+	/** 用户名 */
 	printf("who are you?\n");
 	scanf("%s",user.userName);
-	printf("who do you want to chat to?\n");
-	scanf("%s",user.charWithWho);
+
 	jsonFirstConnect_P(&user,buff);
 	printf("%d\n",jsonProtocol(buff));
 	if( send(clientfd, buff, MAXLINE, 0)== -1)perror("send error");
+
+	pthread_t pid;
+	pthread_create(&pid, NULL, getServerMsg, (void*)&clientfd);
 
 	while(1 ){
 		printf("--------------------------------\n");
