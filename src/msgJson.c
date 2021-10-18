@@ -87,11 +87,11 @@ void jsonFromWho_A(char *payload)
 	assert(rootJson!=NULL);
 	cJSON *dataJson=cJSON_GetObjectItem(rootJson,"data");
 	assert(dataJson!=NULL);
-	cJSON *getCharWithWho=cJSON_GetObjectItem(dataJson,"charWithWho");
-	assert(getCharWithWho!=NULL);
+	cJSON *getUserName=cJSON_GetObjectItem(dataJson,"username");
+	assert(getUserName!=NULL);
 	cJSON *getWords=cJSON_GetObjectItem(dataJson,"words");
 	assert(getWords!=NULL);
-	printf("from:%s:\n%s\n",getCharWithWho->valuestring,getWords->valuestring);
+	printf("from:%s:\n%s\n",getUserName->valuestring,getWords->valuestring);
 }
 
 
