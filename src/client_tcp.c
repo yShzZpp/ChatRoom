@@ -21,10 +21,11 @@
 #define IP "172.28.255.15"
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void *getServerMsg(void* clientfd)
+void *getServerMsg(void* arg)
 {
+
 	char *buff=malloc(MAXLINE);
-	int fd=*(int *)clientfd,ret=0;
+	int fd=*(int *)arg,ret=0;
 	fd_set readSet ;
 	FD_ZERO(&readSet);
 	FD_SET(fd,&readSet);
